@@ -49,6 +49,16 @@ const pad = (value: number) => value.toString().padStart(2, '0');
 export const toLocalDateKey = (date: Date): string =>
     `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
+const isValidLocalDateKey = (value: string): boolean => {
+    const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return false;
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+};
+
 const localDayNumber = (dateKey: string): number => {
     const [year, month, day] = dateKey.split('-').map(Number);
     return Math.floor(Date.UTC(year, month - 1, day) / 86400000);
@@ -107,7 +117,7 @@ const isValidRecord = (value: unknown): value is LearningReportRecord => {
     if (!value || typeof value !== 'object') return false;
     const record = value as Partial<LearningReportRecord>;
     return record.version === 1 && typeof record.id === 'string' && typeof record.studentId === 'string'
-        && typeof record.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(record.date)
+        && typeof record.date === 'string' && isValidLocalDateKey(record.date)
         && typeof record.completedAt === 'string' && Number.isFinite(Date.parse(record.completedAt)) && typeof record.activity === 'string'
         && typeof record.correct === 'number' && Number.isFinite(record.correct) && record.correct >= 0
         && typeof record.total === 'number' && Number.isFinite(record.total) && record.total >= record.correct
@@ -124,7 +134,9 @@ export const readReportStore = (storage: Pick<Storage, 'getItem'> = localStorage
         const parsed = JSON.parse(raw) as unknown;
         const candidates = Array.isArray(parsed) ? parsed : (parsed as Partial<ReportStore>)?.records;
         if (!Array.isArray(candidates)) return [];
-        return candidates.filter(isValidRecord);
+        const unique = new Map<string, LearningReportRecord>();
+        candidates.filter(isValidRecord).forEach(record => unique.set(record.id, record));
+        return [...unique.values()].sort((a, b) => b.completedAt.localeCompare(a.completedAt));
     } catch {
         return [];
     }
@@ -167,8 +179,9 @@ const summarizePeriod = (records: LearningReportRecord[]) => {
 
 export const getWeeklySummary = (records: LearningReportRecord[], now = new Date()): WeeklySummary => {
     const today = localDayNumber(toLocalDateKey(now));
-    const current = records.filter(record => { const day = localDayNumber(record.date); return day <= today && day >= today - 6; });
-    const previous = records.filter(record => { const day = localDayNumber(record.date); return day <= today - 7 && day >= today - 13; });
+    const validRecords = records.filter(record => isValidLocalDateKey(record.date));
+    const current = validRecords.filter(record => { const day = localDayNumber(record.date); return day <= today && day >= today - 6; });
+    const previous = validRecords.filter(record => { const day = localDayNumber(record.date); return day <= today - 7 && day >= today - 13; });
     const currentTotals = summarizePeriod(current);
     const previousTotals = summarizePeriod(previous);
     return {
