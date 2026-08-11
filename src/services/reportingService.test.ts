@@ -47,8 +47,16 @@ describe('report records', () => {
             { ...good, id: 'bad-array', strengths: [123] },
             { ...good, id: 'bad-total', correct: 2, total: 1 },
             { ...good, id: 'bad-date', date: 'not-a-date' },
+            { ...good, id: 'invalid-calendar-date', date: '2026-02-30' },
         ] }) };
         expect(readReportStore(storage).map(item => item.id)).toEqual([good.id]);
+    });
+
+    it('removes duplicate report IDs while keeping the newest record', () => {
+        const first = quizResultToReport(result(new Date(2026, 6, 17, 12).getTime()));
+        const newer = { ...first, completedAt: new Date(2026, 6, 18, 12).toISOString(), date: '2026-07-18' };
+        const storage = { getItem: () => JSON.stringify({ version: 1, records: [first, newer] }) };
+        expect(readReportStore(storage)).toEqual([newer]);
     });
 });
 
