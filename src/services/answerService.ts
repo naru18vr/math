@@ -50,6 +50,12 @@ export const normalizeAnswer = (input: string): string => {
     const square = normalized.match(/^(\([^)]+\))\^2$/);
     if (square) normalized = square[1] + square[1];
     normalized = normalized.replace(/\(([^()]+)\)\^2/g, '($1)($1)');
+    normalized = normalized.replace(/\(([^()]+)\)/g, (whole, inner: string) => {
+        const polynomial = parsePolynomial(inner);
+        if (!polynomial) return whole;
+        return `(${[...polynomial].sort(([a], [b]) => a - b).filter(([, coefficient]) => coefficient !== 0)
+            .map(([degree, coefficient]) => `${coefficient}${degree ? `x^${degree}` : ''}`).join('+') || '0'})`;
+    });
     const factors = normalized.match(/\([^)]+\)/g);
     if (factors && factors.length > 1 && factors.join('') === normalized) return factors.sort().join('');
 
@@ -72,6 +78,7 @@ const parseRational = (value: string): number | null => {
 };
 
 const parsePolynomial = (value: string): Map<number, number> | null => {
+    value = value.replace(/(\d)\*x/g, '$1x');
     if (!value.includes('x') || !/^[0-9x^+\-]+$/.test(value)) return null;
     const terms = value.replace(/-/g, '+-').split('+').filter(Boolean);
     const result = new Map<number, number>();
@@ -119,6 +126,11 @@ export const isAnswerCorrect = (input: string, expected: string): boolean => {
     if (!normalizedInput || !normalizedExpected || normalizedInput.length > 200) return false;
     if (normalizedInput === normalizedExpected) return true;
 
+    if (normalizedInput.startsWith('y=') && normalizedExpected.startsWith('y=')) {
+        const first = parsePolynomial(normalizedInput.slice(2));
+        const second = parsePolynomial(normalizedExpected.slice(2));
+        if (first && second) return polynomialsEqual(first, second);
+    }
     const inputAssignments = parseAssignments(normalizedInput);
     const expectedAssignments = parseAssignments(normalizedExpected);
     if (inputAssignments && expectedAssignments) {

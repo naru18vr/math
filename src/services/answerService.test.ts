@@ -38,6 +38,13 @@ describe('answer service', () => {
         expect(isAnswerCorrect('0,2/4', '0,0.5')).toBe(true);
         expect(isAnswerCorrect('3,0', '0,3')).toBe(false);
     });
+    it('accepts reordered factors and equivalent function notation', () => {
+        expect(isAnswerCorrect('(2+x)(3+x)', '(x+2)(x+3)')).toBe(true);
+        expect(isAnswerCorrect('2(3+x)', '2(x+3)')).toBe(true);
+        expect(isAnswerCorrect('y=2+1*x', 'y=x+2')).toBe(true);
+        expect(isAnswerCorrect('y=2+2x', 'y=x+2')).toBe(false);
+        expect(isAnswerCorrect('x=1±√2', 'x=1-√2,1+√2')).toBe(true);
+    });
     it('accepts full-width input and common units', () => {
         expect(isAnswerCorrect('１２cm', '12')).toBe(true);
         expect(normalizeAnswer('ＳＱＲＴ ９')).toBe('√9');
