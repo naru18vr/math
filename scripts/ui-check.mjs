@@ -124,6 +124,7 @@ try {
         await expect(page.getByText('1 / 20', { exact: true })).toBeVisible();
         await expect(page.locator('.symbol-keys').getByRole('button', { name: 'x', exact: true })).toBeVisible();
         await expect(page.locator('.symbol-keys').getByRole('button', { name: '√', exact: true })).toBeVisible();
+        await expect(page.locator('.question-text')).toHaveClass(/is-prose/);
         await snapshot(page, 'algebra-keypad', width);
         // Cancelling an exit must keep the active question and input.
         await page.locator('.number-keys').getByRole('button', { name: '1', exact: true }).click();

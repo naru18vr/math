@@ -266,6 +266,8 @@ input:not([type='checkbox']):not([type='file']) {
 }
 
 @media (max-width: 360px) {
+    .dashboard-heading { display: block; }
     .dashboard-heading .screen-title { font-size: 20px; }
+    .daily-badge { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
     .results-screen > .grid .text-3xl { font-size: 18px; }
 }
