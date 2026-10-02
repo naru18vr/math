@@ -56,7 +56,8 @@ main:focus { outline: none; }
 .learner-card[aria-pressed=true] { background: #fff; border-color: #2563eb; box-shadow: 0 0 0 1px #2563eb; }
 .learner-card > .text-xs { display: block; margin-top: 4px; color: #64748b; font-size: 11px; }
 .learner-name { display: flex; gap: 8px; align-items: center; justify-content: space-between; font-weight: 750; }
-.learner-name > span { color: #2563eb; }
+.learner-name > [aria-hidden] { color: #2563eb; flex-shrink: 0; }
+.learner-name-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dashboard { display: grid; gap: 26px; }
 .dashboard-heading { display: flex; justify-content: space-between; gap: 16px; align-items: center; }
 .daily-badge { color: #64748b; font-size: 11px; text-align: right; flex-shrink: 0; }
@@ -158,7 +159,9 @@ main:focus { outline: none; }
 .result-actions button { margin: 0; width: 100%; font-size: 14px; padding: 13px 10px; border-radius: 13px; transform: none; }
 .results-screen > .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .results-screen > .grid > div { padding: 18px 8px; }
-.results-screen > .grid .text-3xl { font-size: 26px; }
+.results-screen > .grid .text-3xl { font-size: 26px; white-space: nowrap; }
+.result-actions .bg-sky-500 { background: #1d4ed8; }
+.result-actions .bg-sky-500:hover { background: #1e40af; }
 .screen-content details { padding: 16px; }
 .screen-content summary { min-height: 48px; }
 .screen-history .flex.justify-between.items-baseline { flex-wrap: wrap; gap: 5px 15px; }
@@ -175,7 +178,7 @@ main:focus { outline: none; }
 .grade-accordion summary > span { float: right; color: #64748b; font-size: 12px; }
 .accordion-content { padding: 0 16px 16px; }
 .accordion-content > button { display: block; margin-left: auto; }
-.test-start-panel { position: sticky; bottom: 10px; padding: 18px; box-shadow: 0 5px 28px #20334b14; margin-top: 24px; }
+.test-start-panel { position: static; padding: 18px; box-shadow: 0 5px 28px #20334b14; margin-top: 24px; }
 .test-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .test-controls label { display: block !important; min-height: 0 !important; font-size: 12px !important; color: #64748b; font-weight: 700; }
 .test-controls select { display: block; width: 100%; margin-top: 5px; padding: 8px; background: #fff; border: 1px solid #d5dfec; border-radius: 10px; color: #20334b; }
@@ -260,4 +263,9 @@ input:not([type='checkbox']):not([type='file']) {
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
+}
+
+@media (max-width: 360px) {
+    .dashboard-heading .screen-title { font-size: 20px; }
+    .results-screen > .grid .text-3xl { font-size: 18px; }
 }

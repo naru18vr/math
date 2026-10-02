@@ -103,6 +103,9 @@ try {
         await page.getByLabel('名前', { exact: true }).fill('あ'.repeat(40));
         await page.getByRole('button', { name: '保存する', exact: true }).click();
         await nav(page, '学習').click(); await snapshot(page, 'long-name', width);
+        for (const card of await page.locator('.learner-card').all()) {
+            const box = await card.boundingBox(); assert.ok(box.height <= 110, 'Long name must not expand the learner cards');
+        }
 
         // Combined setup, topic search, and algebra keys.
         await page.getByRole('button', { name: /^中3.*22単元/ }).click();

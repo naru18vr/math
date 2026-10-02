@@ -61,7 +61,7 @@ const LearnerSelector = ({ profiles, activeProfile, onSelect }: {
                         ? 'border-sky-500 bg-sky-50 text-sky-800'
                         : 'border-slate-200 bg-white text-slate-600 hover:border-sky-300'}`}
                 >
-                    <span className="learner-name">{profile.name}<span aria-hidden="true">{profile.id === activeProfile.id ? '✓' : ''}</span></span>
+                    <span className="learner-name"><span className="learner-name-text" title={profile.name}>{profile.name}</span><span aria-hidden="true">{profile.id === activeProfile.id ? '✓' : ''}</span></span>
                     <span className="text-xs">{profile.id === 'grade5' ? '小4のおさらい＋小5〜中3' : '中1のおさらい＋中2〜中3'}</span>
                 </button>
             ))}
@@ -319,7 +319,7 @@ const Quiz = ({
             <div className="quiz-track" role="progressbar" aria-label="解答の進み具合" aria-valuenow={currentQuestionIndex} aria-valuemin={0} aria-valuemax={questions.length}><span style={{ width: `${currentQuestionIndex / questions.length * 100}%` }} /></div>
             <div className="question-card surface">
                 <div>
-                  <p className={`question-text ${currentQuestion.text.length > 50 ? 'is-prose' : ''}`}>
+                  <p className={`question-text ${currentQuestion.text.length > 35 ? 'is-prose' : ''}`}>
                     {splitMathText(currentQuestion.text).map((part, index) => part.superscript
                         ? <sup key={index}>{part.text}</sup>
                         : <React.Fragment key={index}>{part.text}</React.Fragment>)}
