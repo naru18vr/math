@@ -17,8 +17,10 @@ export const generateM3ExtendedQuestion = (topic: Topic, difficulty: Difficulty)
             const term = shift ? `(x-${shift})^2` : 'x^2';
             const root = Number.isInteger(Math.sqrt(n)) ? String(Math.sqrt(n)) : `√${n}`;
             const answer = shift ? `x=${shift}-${root},${shift}+${root}` : `x=-${root},${root}`;
+            const constant = shift * shift - n;
+            const constantTerm = constant < 0 ? String(constant) : `+${constant}`;
             const text = difficulty === '発展'
-                ? `x^2-${2 * shift}x+${shift * shift - n}=0 を平方完成して解きなさい。解はコンマで区切って答えなさい。`
+                ? `x^2-${2 * shift}x${constantTerm}=0 を平方完成して解きなさい。解はコンマで区切って答えなさい。`
                 : `${term}=${n} を解きなさい。解はコンマで区切って答えなさい。`;
             return { text, answer, explanation: `${term}=${n}なので、${shift ? `x-${shift}` : 'x'}は${root}または-${root}です。答えは ${answer}。` };
         }

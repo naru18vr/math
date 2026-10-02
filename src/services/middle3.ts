@@ -87,8 +87,10 @@ export const generateM3Question = (topic: Topic, difficulty: Difficulty): Omit<Q
             const p2 = randInt(1, 2);
             const v1 = 'x';
             const v2 = 'y';
-            text = `${common}${v1}^${p1} + ${common}${v2}^${p2} を因数分解しなさい。`;
-            answer = `${common}(${v1}^${p1}+${v2}^${p2})`;
+            const term1 = p1 === 1 ? v1 : `${v1}^${p1}`;
+            const term2 = p2 === 1 ? v2 : `${v2}^${p2}`;
+            text = `${common}${term1} + ${common}${term2} を因数分解しなさい。`;
+            answer = `${common}(${term1}+${term2})`;
             explanation = `共通因数 ${common} でくくります。答えは ${answer}。`;
         }
         break;
@@ -112,7 +114,8 @@ export const generateM3Question = (topic: Topic, difficulty: Difficulty): Omit<Q
             explanation = `公式 a²-b² = (a+b)(a-b) を使います。答えは (x+${a})(x-${a})。`;
         } else { // 発展
             const coeff = randInt(2, 4);
-            const term = randInt(2, 5);
+            const candidates = [2, 3, 4, 5].filter(value => gcd(coeff, value) === 1);
+            const term = candidates[randInt(0, candidates.length - 1)];
             const v1 = 'x';
             const v2 = 'y';
             text = `${coeff*coeff}${v1}^2 - ${term*term}${v2}^2 を因数分解しなさい。`;
