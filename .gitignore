@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 
 .math-audit.json
+
+ui-artifacts/

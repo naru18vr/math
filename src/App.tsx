@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect, useMemo, useReducer, useCallback, useRef } from 'react';
-import { TOPICS_BY_GRADE, MAX_ATTEMPTS, ENCOURAGEMENT_MESSAGES, NUM_QUESTIONS_OPTIONS, DIFFICULTY_LEVELS } from './constants';
+import { TOPICS_BY_GRADE, MAX_ATTEMPTS, ENCOURAGEMENT_MESSAGES } from './constants';
 import type { Grade, Topic, Question, QuizResult, QuestionResult, Difficulty, StudentProfile } from './types';
 import { generateMixedQuestions, generateQuestions, generateTopicMixQuestions } from './services/questionService';
 import { useStudentProfile } from './hooks/useStudentProfile';
@@ -13,6 +13,7 @@ import { buildDailyReportText, buildWeeklyReportText, copyText, getWeeklySummary
 import type { LearningReportRecord } from './services/reportingService';
 import { splitMathText } from './services/utils';
 import { normalizeHistory, readHistory, saveHistory } from './services/historyService';
+import { Header, Keypad, TopicSelector, QuizSetup, UIIcon } from './components/LearningUI';
 
 // --- Helper Functions ---
 const formatTime = (ms: number): string => {
@@ -28,35 +29,6 @@ const formatTime = (ms: number): string => {
 
 
 // --- Components ---
-
-const Header = ({ title, onHistoryClick, onProfileClick, onParentClick, onHomeClick, showHomeButton }: { title: string, onHistoryClick: () => void, onProfileClick: () => void, onParentClick: () => void, onHomeClick: () => void, showHomeButton: boolean }) => (
-    <header className="bg-white shadow-md sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-3">
-                <h1 className="font-bold text-slate-800">
-                    <span className="text-lg sm:hidden">数学</span>
-                    <span className="hidden text-2xl sm:inline">{title}</span>
-                </h1>
-                <div className="flex items-center sm:gap-2">
-                    {showHomeButton && (
-                        <button onClick={onHomeClick} className="min-h-12 min-w-12 p-2 rounded-full hover:bg-slate-200 transition-colors" aria-label="トップに戻る">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3v-6a1 1 0 011-1h2a1 1 0 011 1v6h3a1 1 0 001-1V10l-7-7-7 7z" /></svg>
-                        </button>
-                    )}
-                     <button onClick={onProfileClick} className="min-h-12 min-w-12 p-2 rounded-full hover:bg-slate-200 transition-colors" aria-label="プロフィール">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                    </button>
-                    <button onClick={onParentClick} className="min-h-12 min-w-12 p-2 rounded-full hover:bg-slate-200 transition-colors" aria-label="保護者向け進捗">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-6m4 6V7m4 10v-3M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                    </button>
-                    <button onClick={onHistoryClick} className="min-h-12 min-w-12 p-2 rounded-full hover:bg-slate-200 transition-colors" aria-label="学習履歴">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
-);
 
 const Footer = () => (
     <footer className="text-center py-4 text-slate-500 text-sm">
@@ -77,19 +49,19 @@ const LearnerSelector = ({ profiles, activeProfile, onSelect }: {
     activeProfile: StudentProfile;
     onSelect: (id: StudentProfile['id']) => void;
 }) => (
-    <div className="px-4 pt-5 sm:px-6">
-        <p className="text-sm font-semibold text-slate-600 mb-2">学習する人</p>
+    <div className="learner-selector">
+        <p className="text-sm font-semibold text-slate-600 mb-2">だれが学習する？</p>
         <div className="grid grid-cols-2 gap-3">
             {profiles.map(profile => (
                 <button
                     key={profile.id}
                     onClick={() => onSelect(profile.id)}
                     aria-pressed={profile.id === activeProfile.id}
-                    className={`p-3 rounded-lg border-2 text-left transition-colors ${profile.id === activeProfile.id
+                    className={`learner-card p-3 rounded-lg border-2 text-left transition-colors ${profile.id === activeProfile.id
                         ? 'border-sky-500 bg-sky-50 text-sky-800'
                         : 'border-slate-200 bg-white text-slate-600 hover:border-sky-300'}`}
                 >
-                    <span className="block font-bold">{profile.name}</span>
+                    <span className="learner-name">{profile.name}<span aria-hidden="true">{profile.id === activeProfile.id ? '✓' : ''}</span></span>
                     <span className="text-xs">{profile.id === 'grade5' ? '小4のおさらい＋小5〜中3' : '中1のおさらい＋中2〜中3'}</span>
                 </button>
             ))}
@@ -97,88 +69,29 @@ const LearnerSelector = ({ profiles, activeProfile, onSelect }: {
     </div>
 );
 
-const LearningDashboard = ({ grades, history, onContinue, onSelectGrade, onMixedTest, onBuildTest, dailyGoal, reviewGrade }: {
-    grades: Grade[];
-    history: QuizResult[];
-    onContinue: (grade: Grade, topic: Topic) => void;
-    onSelectGrade: (grade: Grade) => void;
-    onMixedTest: () => void;
-    onBuildTest: () => void;
-    dailyGoal: number;
-    reviewGrade: Grade;
+const LearningDashboard = ({ grades, history, onContinue, onQuickStart, onSelectGrade, onMixedTest, onBuildTest, dailyGoal, reviewGrade }: {
+    grades: Grade[]; history: QuizResult[]; dailyGoal: number; reviewGrade: Grade;
+    onContinue: (grade: Grade, topic: Topic) => void; onQuickStart: (grade: Grade, topic: Topic) => void;
+    onSelectGrade: (grade: Grade) => void; onMixedTest: () => void; onBuildTest: () => void;
 }) => {
     const courseTopics = getCourseTopics(grades);
     const recommended = getRecommendedTopic(history, grades);
     const weakTopics = getWeakTopics(history, grades);
     const mastered = courseTopics.filter(({ topic }) => getTopicProgress(history, topic.id).mastery >= 80).length;
-    const progress = courseTopics.length === 0 ? 0 : Math.round((mastered / courseTopics.length) * 100);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const answeredToday = history.filter(session => session.endTime >= today.getTime()).reduce((sum, session) => sum + session.results.length, 0);
+    const progress = courseTopics.length ? Math.round(mastered / courseTopics.length * 100) : 0;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+    const answeredToday = history.filter(session => session.endTime >= today.getTime() && session.endTime < tomorrow.getTime()).reduce((sum, session) => sum + session.results.length, 0);
     const dailyProgress = Math.min(100, Math.round(answeredToday / dailyGoal * 100));
-
-    return (
-        <div className="p-4 sm:p-6 space-y-5">
-            <section className="bg-white p-4 rounded-xl shadow-md">
-                <div className="flex justify-between mb-2"><span className="font-bold text-slate-700">今日の目標</span><span className="font-bold text-sky-700">{answeredToday} / {dailyGoal}問</span></div>
-                <div className="h-3 bg-slate-200 rounded-full overflow-hidden"><div className={`h-full ${dailyProgress >= 100 ? 'bg-amber-500' : 'bg-sky-500'}`} style={{ width: `${dailyProgress}%` }} /></div>
-                {dailyProgress >= 100 && <p className="text-sm text-amber-700 font-bold mt-2">今日の目標達成！</p>}
-            </section>
-            <section className="bg-gradient-to-br from-sky-500 to-indigo-600 text-white p-5 rounded-xl shadow-lg">
-                <p className="text-sm text-sky-100">今日のおすすめ</p>
-                <h2 className="text-xl font-bold mt-1">{recommended?.topic.name ?? 'コースを準備中'}</h2>
-                {recommended && (
-                    <>
-                        <p className="text-sm text-sky-100 mt-1">{recommended.grade}・習熟度 {getTopicProgress(history, recommended.topic.id).mastery}%</p>
-                        <button onClick={() => onContinue(recommended.grade, recommended.topic)} className="mt-4 w-full bg-white text-sky-700 font-bold py-3 rounded-lg hover:bg-sky-50">
-                            学習を始める
-                        </button>
-                    </>
-                )}
-            </section>
-
-            <section className="bg-white p-4 rounded-xl shadow-md">
-                <div className="flex justify-between text-sm mb-2">
-                    <span className="font-bold text-slate-700">コース進捗</span>
-                    <span className="text-slate-500">{mastered} / {courseTopics.length}単元</span>
-                </div>
-                <div className="h-3 bg-slate-200 rounded-full overflow-hidden"><div className="h-full bg-emerald-500" style={{ width: `${progress}%` }} /></div>
-                <p className="text-right text-xs text-slate-500 mt-1">{progress}%</p>
-            </section>
-
-            {weakTopics.length > 0 && (
-                <section>
-                    <h3 className="font-bold text-slate-700 mb-2">復習すると伸びる単元</h3>
-                    <div className="space-y-2">
-                        {weakTopics.map(({ grade, topic, progress: topicProgress }) => (
-                            <button key={topic.id} onClick={() => onContinue(grade, topic)} className="w-full bg-amber-50 border border-amber-200 p-3 rounded-lg text-left flex justify-between">
-                                <span><span className="text-xs text-amber-700">{grade}</span><span className="block font-semibold text-slate-800">{topic.name}</span></span>
-                                <span className="font-bold text-amber-700">{topicProgress.mastery}%</span>
-                            </button>
-                        ))}
-                    </div>
-                </section>
-            )}
-
-            <section>
-                <h3 className="font-bold text-slate-700 mb-2">学年から選ぶ</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {grades.map(grade => <button key={grade} onClick={() => onSelectGrade(grade)} className="p-3 bg-white rounded-lg shadow text-sky-700 font-bold hover:bg-sky-50">{grade}{grade === reviewGrade && <span className="block text-xs font-medium text-amber-600">おさらい</span>}</button>)}
-                </div>
-            </section>
-
-            <div className="grid sm:grid-cols-2 gap-3">
-            <button onClick={onMixedTest} className="w-full p-4 bg-slate-800 hover:bg-slate-900 text-white rounded-xl shadow-md text-left">
-                <span className="block font-bold text-lg">総合テスト</span>
-                <span className="text-sm text-slate-300">これまでの範囲から20問・弱点発見にもおすすめ</span>
-            </button>
-            <button onClick={onBuildTest} className="w-full p-4 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl shadow-md text-left">
-                <span className="block font-bold text-lg">範囲指定テスト</span>
-                <span className="text-sm text-indigo-200">学校のテスト範囲に合わせて単元を選択</span>
-            </button>
-            </div>
-        </div>
-    );
+    return <div className="screen-padding dashboard">
+        <div className="dashboard-heading"><div><p className="eyebrow">少しずつ、できるを増やそう</p><h2 className="screen-title">今日もひとつ、学ぼう。</h2></div><span className="daily-badge">{dailyProgress >= 100 ? '目標達成 ✓' : '今日の目標'}<strong>{answeredToday}<small> / {dailyGoal}問</small></strong></span></div>
+        <div className="goal-track" role="progressbar" aria-label="今日の目標の達成率" aria-valuenow={dailyProgress} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${dailyProgress}%` }} /></div>
+        {recommended && <section className="recommendation-card"><div className="recommendation-copy"><span className="recommendation-label">今日のおすすめ · {recommended.grade}</span><h3>{recommended.topic.name}</h3><p>まずは10問。解説を見ながら、自分のペースで。</p></div><div className="recommendation-actions"><button className="primary-button" onClick={() => onQuickStart(recommended.grade, recommended.topic)}><UIIcon kind="play" />おすすめの10問を始める</button><button className="text-button" onClick={() => onContinue(recommended.grade, recommended.topic)}>先に学習ポイントを見る →</button></div></section>}
+        {weakTopics.length > 0 && <section><div className="section-heading"><h3>もう一度、練習しよう</h3><span>復習すると伸びる単元</span></div><div className="topic-grid">{weakTopics.map(({ grade, topic }) => <button key={topic.id} className="topic-card review-card" onClick={() => onContinue(grade, topic)}><span><small>{grade} · 復習</small><strong>{topic.name}</strong></span><UIIcon kind="arrow" /></button>)}</div></section>}
+        <section><div className="section-heading"><h3>学年から選ぶ</h3><span>好きな単元を練習</span></div><div className="grade-grid">{grades.map(grade => <button key={grade} className="grade-card" onClick={() => onSelectGrade(grade)}><strong>{grade}</strong><span>{grade === reviewGrade ? 'おさらい' : `${TOPICS_BY_GRADE[grade].length}単元`}</span><UIIcon kind="arrow" size={18} /></button>)}</div></section>
+        <section className="test-grid"><button className="test-card" onClick={onMixedTest}><span className="test-icon" aria-hidden="true">✓</span><span><strong>力だめし</strong><small>コースの範囲から20問</small></span><UIIcon kind="arrow" /></button><button className="test-card" onClick={onBuildTest}><span className="test-icon" aria-hidden="true">≡</span><span><strong>範囲を選んでテスト</strong><small>学校のテストに向けて</small></span><UIIcon kind="arrow" /></button></section>
+        <section className="course-progress surface"><div><h3>これまでの積み重ね</h3><p>{mastered} / {courseTopics.length}単元を習得</p></div><strong>{progress}%</strong><div className="goal-track" role="progressbar" aria-label="コースの習得率" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${progress}%` }} /></div></section>
+    </div>;
 };
 
 const CopyReportPanel = ({ text, label }: { text: string; label: string }) => {
@@ -204,9 +117,9 @@ const ParentDashboard = ({ grades, history, learnerName, profile, onBack }: { gr
     const weeklySummary = getWeeklySummary(compatibleReports);
     const weeklyText = buildWeeklyReportText(weeklySummary, profile);
 
-    return <div className="p-4 sm:p-6">
+    return <div className="screen-padding">
         <BackButton onClick={onBack}>トップに戻る</BackButton>
-        <div className="flex justify-between items-center mb-5"><h2 className="text-2xl font-bold text-slate-800">保護者向け進捗</h2><button disabled={history.length === 0} onClick={() => setExportMessage(downloadHistoryCsv(history, learnerName) ? '✓ CSVを保存しました。' : '⚠ CSVを保存できませんでした。ダウンロード許可を確認してください。')} className="px-3 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg disabled:bg-slate-300">CSV出力</button></div>
+        <div className="flex justify-between items-center mb-5"><h2 className="text-2xl font-bold text-slate-800">学習の進み具合</h2><button disabled={history.length === 0} onClick={() => setExportMessage(downloadHistoryCsv(history, learnerName) ? '✓ CSVを保存しました。' : '⚠ CSVを保存できませんでした。ダウンロード許可を確認してください。')} className="px-3 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg disabled:bg-slate-300">CSV出力</button></div>
         {exportMessage && <p role="status" className={`mb-4 text-sm font-semibold ${exportMessage.startsWith('✓') ? 'text-emerald-700' : 'text-rose-700'}`}>{exportMessage}</p>}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             {[['学習回数', `${history.length}回`], ['学習時間', `${totalMinutes}分`], ['正答率', `${accuracy}%`], ['習得単元', `${mastered}/${topics.length}`]].map(([label, value]) => <div key={label} className="bg-white p-4 rounded-lg shadow"><p className="text-xs text-slate-500">{label}</p><p className="text-2xl font-bold text-slate-800">{value}</p></div>)}
@@ -223,34 +136,21 @@ const TestBuilder = ({ grades, reviewGrade, onStart, onBack }: { grades: Grade[]
     const [count, setCount] = useState(20);
     const [level, setLevel] = useState<Difficulty>('標準');
     const toggle = (id: string) => setSelected(current => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next; });
-    return <div className="p-4 sm:p-6"><BackButton onClick={onBack}>トップに戻る</BackButton><h2 className="text-2xl font-bold mb-2">範囲指定テスト</h2><p className="text-sm text-slate-500 mb-5">出題したい単元を1つ以上選んでください。</p>
-        {grades.map(grade => <section key={grade} className="mb-5"><div className="flex justify-between mb-2"><h3 className="font-bold">{grade}{grade === reviewGrade && <span className="ml-2 text-xs text-amber-700 bg-amber-100 px-2 py-1 rounded-full">おさらい</span>}</h3><button onClick={() => setSelected(current => { const next = new Set(current); TOPICS_BY_GRADE[grade].forEach(topic => next.add(topic.id)); return next; })} className="text-sm text-sky-700">すべて選択</button></div><div className="grid sm:grid-cols-2 gap-2">{TOPICS_BY_GRADE[grade].map(topic => <label key={topic.id} className={`p-3 rounded-lg border cursor-pointer ${selected.has(topic.id) ? 'bg-indigo-50 border-indigo-400' : 'bg-white border-slate-200'}`}><input type="checkbox" checked={selected.has(topic.id)} onChange={() => toggle(topic.id)} className="mr-2" />{topic.name}</label>)}</div></section>)}
-        <div className="sticky bottom-2 bg-white border p-4 rounded-xl shadow-xl"><div className="grid grid-cols-2 gap-3 mb-3"><select aria-label="難易度" value={level} onChange={event => setLevel(event.target.value as Difficulty)} className="min-h-12 border rounded p-2"><option>基礎</option><option>標準</option><option>発展</option></select><select aria-label="問題数" value={count} onChange={event => setCount(Number(event.target.value))} className="min-h-12 border rounded p-2"><option value={10}>10問</option><option value={20}>20問</option><option value={30}>30問</option></select></div><button disabled={selected.size === 0} onClick={() => onStart(courseTopics.filter(({ topic }) => selected.has(topic.id)).map(({ topic }) => topic), count, level)} className="min-h-12 w-full py-3 bg-indigo-600 text-white font-bold rounded-lg disabled:bg-slate-300">選択した{selected.size}単元で開始</button></div>
+    const toggleGrade = (grade: Grade) => setSelected(current => {
+        const next = new Set(current); const allSelected = TOPICS_BY_GRADE[grade].every(topic => next.has(topic.id));
+        TOPICS_BY_GRADE[grade].forEach(topic => { if (allSelected) next.delete(topic.id); else next.add(topic.id); });
+        return next;
+    });
+    return <div className="screen-padding test-builder"><BackButton onClick={onBack}>トップに戻る</BackButton><p className="eyebrow">学校のテストに向けて</p><h2 className="screen-title">範囲を選んでテスト</h2><p className="screen-description">学年を開いて、練習したい単元にチェック。</p>
+        {grades.map((grade, index) => <details key={grade} open={index === 0} className="grade-accordion surface"><summary><strong>{grade}{grade === reviewGrade && <small> おさらい</small>}</strong><span>{TOPICS_BY_GRADE[grade].filter(topic => selected.has(topic.id)).length} / {TOPICS_BY_GRADE[grade].length}単元</span></summary><div className="accordion-content"><button className="text-button" onClick={() => toggleGrade(grade)}>{TOPICS_BY_GRADE[grade].every(topic => selected.has(topic.id)) ? 'この学年の選択を解除' : 'この学年をすべて選択'}</button><div className="grid sm:grid-cols-2 gap-2">{TOPICS_BY_GRADE[grade].map(topic => <label key={topic.id} className={`p-3 rounded-lg border cursor-pointer ${selected.has(topic.id) ? 'bg-indigo-50 border-indigo-400' : 'bg-white border-slate-200'}`}><input type="checkbox" checked={selected.has(topic.id)} onChange={() => toggle(topic.id)} />{topic.name}</label>)}</div></div></details>)}
+        <div className="test-start-panel surface"><div className="test-controls"><label>難易度<select value={level} onChange={event => setLevel(event.target.value as Difficulty)}><option>基礎</option><option>標準</option><option>発展</option></select></label><label>問題数<select value={count} onChange={event => setCount(Number(event.target.value))}><option value={10}>10問</option><option value={20}>20問</option><option value={30}>30問</option></select></label></div><p className="selection-count" role="status">{selected.size ? `${selected.size}単元を選択中` : '単元を選ぶと開始できます'}</p><button disabled={selected.size === 0} onClick={() => onStart(courseTopics.filter(({ topic }) => selected.has(topic.id)).map(({ topic }) => topic), count, level)} className="primary-button">選択した範囲で{count}問を始める</button></div>
     </div>;
 };
-
-const TopicSelector = ({ topics, onSelectTopic, onBack }: { topics: Topic[], onSelectTopic: (topic: Topic) => void, onBack: () => void }) => (
-    <div className="p-4 sm:p-6">
-        <BackButton onClick={onBack}>学年選択に戻る</BackButton>
-        <h2 className="text-2xl font-bold text-center mb-6 text-slate-700">単元を選ぼう</h2>
-        <div className="space-y-3">
-            {topics.map((topic) => (
-                <button
-                    key={topic.id}
-                    onClick={() => onSelectTopic(topic)}
-                    className="w-full text-left p-4 bg-white rounded-lg shadow-md hover:shadow-lg hover:bg-indigo-50 transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
-                >
-                    <span className="font-semibold text-indigo-800">{topic.name}</span>
-                </button>
-            ))}
-        </div>
-    </div>
-);
 
 const LessonScreen = ({ topic, onStart, onBack }: { topic: Topic; onStart: () => void; onBack: () => void }) => {
     const lesson = getLessonContent(topic);
     return (
-        <div className="p-4 sm:p-6">
+        <div className="screen-padding">
             <BackButton onClick={onBack}>単元選択に戻る</BackButton>
             <div className="bg-white rounded-xl shadow-md overflow-hidden">
                 <div className="bg-indigo-600 text-white p-5"><p className="text-sm text-indigo-100">学習ポイント</p><h2 className="text-2xl font-bold">{topic.name}</h2></div>
@@ -261,86 +161,6 @@ const LessonScreen = ({ topic, onStart, onBack }: { topic: Topic; onStart: () =>
                     <button onClick={onStart} className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg shadow">練習問題へ進む</button>
                 </div>
             </div>
-        </div>
-    );
-};
-
-const DifficultySelector = ({ onSelect, onBack }: { onSelect: (difficulty: Difficulty) => void, onBack: () => void }) => (
-    <div className="p-4 sm:p-6">
-        <BackButton onClick={onBack}>単元選択に戻る</BackButton>
-        <h2 className="text-2xl font-bold text-center mb-6 text-slate-700">難易度を選ぼう</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {DIFFICULTY_LEVELS.map(({ id, name, description }) => (
-                <button
-                    key={id}
-                    onClick={() => onSelect(id)}
-                    className="p-4 bg-white rounded-lg shadow-md hover:shadow-lg hover:bg-emerald-50 transition-all transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50"
-                >
-                    <span className="text-lg font-bold text-emerald-700">{name}</span>
-                    <p className="text-sm text-slate-500 mt-1">{description}</p>
-                </button>
-            ))}
-        </div>
-    </div>
-);
-
-
-const NumQuestionsSelector = ({ onSelect, onBack, backLabel }: { onSelect: (num: number) => void; onBack: () => void; backLabel: string; }) => (
-    <div className="p-4 sm:p-6">
-        <BackButton onClick={onBack}>{backLabel}</BackButton>
-        <h2 className="text-2xl font-bold text-center mb-6 text-slate-700">問題数を選ぼう</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {NUM_QUESTIONS_OPTIONS.map(({ num, label, description }) => (
-                <button
-                    key={num}
-                    onClick={() => onSelect(num)}
-                    className="p-4 bg-white rounded-lg shadow-md hover:shadow-lg hover:bg-amber-50 transition-all transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-opacity-50"
-                >
-                    <span className="text-lg font-bold text-amber-700">{label}</span>
-                     <p className="text-sm text-slate-500 mt-1">{description}</p>
-                </button>
-            ))}
-        </div>
-    </div>
-);
-
-
-const Keypad = ({ onKeyPress }: { onKeyPress: (key: string) => void }) => {
-    const keys = [
-        '7', '8', '9', '⌫', '/',
-        '4', '5', '6', '(', ')',
-        '1', '2', '3', '+', '-',
-        '0', '.', ',', '*', '^',
-        'x', 'y', 'a', 'b', 'c',
-        'd', 'e', 'f', 'r', '=',
-        '√', 'π', ':', 'OK',
-    ];
-
-    return (
-        <div className="grid grid-cols-5 gap-2 p-2 bg-slate-200 rounded-lg mt-4">
-            {keys.map(key => {
-                 const isOk = key === 'OK';
-                 const isBackspace = key === '⌫';
-                 const isSymbol = ['(', ')', '/', '*', '-', '+', ',', '^', ':', '=', '√', 'π', '.'].includes(key);
-                 const isLetter = ['a','b','c','d','e','f','r','x','y'].includes(key);
-
-                return (
-                    <button
-                        key={key}
-                        onClick={() => onKeyPress(key)}
-                        aria-label={key === '⌫' ? '1文字消す' : key === 'OK' ? '答え合わせ' : key}
-                        className={`min-h-12 min-w-0 rounded-lg text-xl font-bold transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 shadow-md active:shadow-inner active:translate-y-px
-                            ${isOk ? 'col-span-2 bg-sky-500 text-white hover:bg-sky-600' : ''}
-                            ${isBackspace ? 'bg-rose-500 text-white hover:bg-rose-600' : ''}
-                            ${isSymbol ? 'bg-slate-100 text-slate-800' : ''}
-                            ${isLetter ? 'bg-indigo-100 text-indigo-800' : ''}
-                            ${!isOk && !isBackspace && !isSymbol && !isLetter ? 'bg-white text-slate-700 hover:bg-slate-50' : ''}
-                        `}
-                    >
-                        {key}
-                    </button>
-                );
-            })}
         </div>
     );
 };
@@ -366,8 +186,16 @@ const Quiz = ({
     const inputRef = useRef<HTMLInputElement>(null);
     const resolvedRef = useRef(false);
     const nextLockedRef = useRef(false);
+    const nextButtonRef = useRef<HTMLButtonElement>(null);
+    const explanationRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => { nextLockedRef.current = false; }, [currentQuestionIndex]);
+    useEffect(() => { nextLockedRef.current = false; window.scrollTo({ top: 0 }); }, [currentQuestionIndex]);
+    useEffect(() => {
+        if (showExplanation) {
+            explanationRef.current?.scrollIntoView({ block: 'nearest' });
+            nextButtonRef.current?.focus({ preventScroll: true });
+        }
+    }, [showExplanation]);
     
     const currentQuestion = questions[currentQuestionIndex];
 
@@ -386,6 +214,8 @@ const Quiz = ({
 
         if (key === 'OK') {
             handleSubmit();
+        } else if (key === 'clear') {
+            setUserAnswer('');
         } else if (key === '⌫') {
             setUserAnswer(prev => prev.slice(0, -1));
         } else {
@@ -469,15 +299,15 @@ const Quiz = ({
     }
 
     return (
-        <div className="p-4 sm:p-6">
-            <div className="mb-6">
+        <div className="screen-padding quiz-screen">
+            <div className="quiz-back">
                 <button onClick={onBack} className="min-h-12 inline-flex items-center text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors">
                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                     問題数選択に戻る
+                     練習を終了する
                 </button>
             </div>
-            <div className="text-sm text-slate-500 mb-2">{topicName}</div>
-            <div className="flex justify-between items-center mb-4">
+            <div className="quiz-topic">{topicName}</div>
+            <div className="quiz-progress-heading" aria-live="polite" aria-atomic="true">
                 <h2 className="text-xl font-bold text-slate-800">
                     第{currentQuestionIndex + 1}問
                 </h2>
@@ -486,9 +316,10 @@ const Quiz = ({
                 </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-lg min-h-[120px] flex items-center justify-center text-center">
+            <div className="quiz-track" role="progressbar" aria-label="解答の進み具合" aria-valuenow={currentQuestionIndex} aria-valuemin={0} aria-valuemax={questions.length}><span style={{ width: `${currentQuestionIndex / questions.length * 100}%` }} /></div>
+            <div className="question-card surface">
                 <div>
-                  <p className="text-2xl sm:text-3xl font-mono text-slate-800">
+                  <p className={`question-text ${currentQuestion.text.length > 50 ? 'is-prose' : ''}`}>
                     {splitMathText(currentQuestion.text).map((part, index) => part.superscript
                         ? <sup key={index}>{part.text}</sup>
                         : <React.Fragment key={index}>{part.text}</React.Fragment>)}
@@ -497,51 +328,54 @@ const Quiz = ({
                 </div>
             </div>
 
-            <div className="mt-6">
-                <div className="flex justify-end mb-2">
+            {!showExplanation && <div className="answer-area">
+                <div className="answer-label-row"><label htmlFor="quiz-answer">答え</label>
                     <button
                         onClick={toggleInputMode}
-                        className="flex items-center px-3 py-1.5 text-sm font-medium text-slate-600 bg-slate-200 rounded-md hover:bg-slate-300 transition-colors"
+                        className="input-mode-button"
                         aria-label={inputMode === 'keypad' ? "キーボード入力に切り替える" : "キーパッド入力に切り替える"}
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 8a2 2 0 00-2-2H4a2 2 0 00-2 2v4a2 2 0 002 2h12a2 2 0 002-2V8zM5 8a1 1 0 011-1h1a1 1 0 110 2H6a1 1 0 01-1-1zm3 0a1 1 0 011-1h1a1 1 0 110 2H9a1 1 0 01-1-1zm3 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zm3 0a1 1 0 011-1h1a1 1 0 110 2h-1a1 1 0 01-1-1zM5 12a1 1 0 011-1h7a1 1 0 110 2H6a1 1 0 01-1-1z" clipRule="evenodd" /></svg>
-                        {inputMode === 'keypad' ? 'キーボード入力' : 'キーパッド入力'}
+                        {inputMode === 'keypad' ? 'キーボードに切替' : '数字キーに切替'}
                     </button>
                 </div>
                 <div className={`relative ${isWrong ? 'animate-shake' : ''}`}>
                      <input
+                        id="quiz-answer"
                         ref={inputRef}
+                        autoComplete="off"
+                        autoCapitalize="off"
+                        spellCheck={false}
                         type="text"
                         value={userAnswer}
                         readOnly={inputMode === 'keypad'}
                         onChange={(e) => setUserAnswer(e.target.value)}
                         placeholder="ここに答えを入力"
                         aria-label="解答入力欄"
-                        className="w-full p-4 text-lg border-2 border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 text-center"
+                        className="answer-input"
                     />
                 </div>
                 <div aria-live="polite" className="min-h-6 mt-1 text-center text-sm font-semibold">
-                    {isWrong && !showExplanation && <span className="text-rose-700">✕ ちがいます。あと{MAX_ATTEMPTS - attempts}回ためせます。</span>}
+                    {attempts > 0 && !showExplanation && <span className="text-rose-700">✕ ちがいます。あと{MAX_ATTEMPTS - attempts}回ためせます。</span>}
                 </div>
-                {inputMode === 'keypad' && <Keypad onKeyPress={handleKeypadPress} />}
-                 {inputMode === 'keyboard' && (
+                {inputMode === 'keypad' && <Keypad key={currentQuestionIndex} onKeyPress={handleKeypadPress} answer={currentQuestion.answer} />}
                     <button
                         onClick={handleSubmit}
                         disabled={showExplanation || !userAnswer.trim()}
-                        className="mt-4 w-full px-4 py-3 bg-sky-500 text-white font-bold rounded-lg shadow-md hover:bg-sky-600 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
+                        className="primary-button answer-submit"
                     >
-                        OK
+                        答え合わせ<UIIcon kind="arrow" />
                     </button>
-                )}
-            </div>
+            </div>}
 
             {showExplanation && (
-                <div className="mt-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200">
+                <div ref={explanationRef} className={`explanation-card ${results[results.length-1].isCorrect ? 'is-correct' : 'is-review'}`} role="status">
                     <h3 className="font-bold text-lg mb-2 text-emerald-800">
-                        {results[results.length-1].isCorrect ? '正解！' : `正解は: ${currentQuestion.answer.replace(/\*/g, '×')}`}
+                        {results[results.length-1].isCorrect ? '✓ 正解！' : '解き方を確認しよう'}
                     </h3>
-                    <p className="text-slate-700">{currentQuestion.explanation}</p>
-                    <button onClick={handleNext} className="mt-4 w-full px-4 py-3 bg-emerald-500 text-white font-bold rounded-lg shadow-md hover:bg-emerald-600 transition-colors">
+                    {!results[results.length-1].isCorrect && <p className="correct-answer">答え：{currentQuestion.answer.replace(/\*/g, '×')}</p>}
+                    <p className="explanation-text">{currentQuestion.explanation}</p>
+                    <button ref={nextButtonRef} onClick={handleNext} className="primary-button next-question">
                         {currentQuestionIndex < questions.length - 1 ? '次の問題へ' : '結果を見る'}
                     </button>
                 </div>
@@ -577,7 +411,7 @@ const ResultsScreen = ({ result, reportRecord, streak, onRetry, onRetryWrong, on
     }, [score]);
 
     return (
-        <div className="p-4 sm:p-6 text-center">
+        <div className="screen-padding results-screen text-center">
             <h2 className="text-3xl font-black text-slate-700 mb-2">結果発表</h2>
             <p className="text-slate-500 mb-6">{grade} - {topic.name} {difficulty && `(${difficulty})`}</p>
             
@@ -600,6 +434,12 @@ const ResultsScreen = ({ result, reportRecord, streak, onRetry, onRetryWrong, on
                 </div>
             </div>
 
+            <div className="result-actions">
+                {incorrectAnswers.length > 0 && <button onClick={onRetryWrong} className="w-full sm:w-auto px-8 py-3 bg-rose-500 text-white font-bold rounded-lg shadow-md hover:bg-rose-600">間違えた問題だけ再挑戦</button>}
+                <button onClick={onRetry} className="w-full sm:w-auto px-8 py-3 bg-sky-500 text-white font-bold rounded-lg shadow-md hover:bg-sky-600 transition-all transform hover:-translate-y-0.5 active:translate-y-0">もう一度挑戦</button>
+                <button onClick={onBackToTop} className="w-full sm:w-auto px-8 py-3 bg-slate-600 text-white font-bold rounded-lg shadow-md hover:bg-slate-700 transition-all transform hover:-translate-y-0.5 active:translate-y-0">トップに戻る</button>
+            </div>
+
             <div className="bg-teal-50 border-2 border-teal-200 rounded-xl p-4 mb-8 text-left"><h3 className="font-bold text-lg text-teal-900 mb-1">おうちの人に今日の結果を知らせよう</h3><p className="text-sm text-teal-800 mb-3">文章をコピーして、内容を確認してからGoogle Chatなどに貼って送れます。自動送信はしません。</p><CopyReportPanel text={buildDailyReportText(reportRecord, streak, `${window.location.origin}${window.location.pathname}#history`)} label="おうちの人に報告をコピー" /></div>
 
             {incorrectAnswers.length > 0 && (
@@ -617,11 +457,7 @@ const ResultsScreen = ({ result, reportRecord, streak, onRetry, onRetryWrong, on
                 </div>
             )}
 
-            <div className="space-y-4 sm:space-y-0 sm:flex sm:space-x-4 justify-center">
-                {incorrectAnswers.length > 0 && <button onClick={onRetryWrong} className="w-full sm:w-auto px-8 py-3 bg-rose-500 text-white font-bold rounded-lg shadow-md hover:bg-rose-600">間違えた問題だけ再挑戦</button>}
-                <button onClick={onRetry} className="w-full sm:w-auto px-8 py-3 bg-sky-500 text-white font-bold rounded-lg shadow-md hover:bg-sky-600 transition-all transform hover:-translate-y-0.5 active:translate-y-0">もう一度挑戦</button>
-                <button onClick={onBackToTop} className="w-full sm:w-auto px-8 py-3 bg-slate-600 text-white font-bold rounded-lg shadow-md hover:bg-slate-700 transition-all transform hover:-translate-y-0.5 active:translate-y-0">トップに戻る</button>
-            </div>
+
         </div>
     );
 };
@@ -644,7 +480,7 @@ const HistoryScreen = ({ history, onBack, onClearHistory }: { history: QuizResul
     }, [history]);
 
     return (
-        <div className="p-4 sm:p-6">
+        <div className="screen-padding">
             <div className="flex justify-between items-center mb-6">
                 <BackButton onClick={onBack}>トップに戻る</BackButton>
                 {history.length > 0 && 
@@ -715,9 +551,9 @@ const ProfileScreen = ({ studentName, updateStudentName, dailyGoal, updateDailyG
     };
 
     return (
-        <div className="p-4 sm:p-6">
+        <div className="screen-padding">
             <BackButton onClick={onBack}>トップに戻る</BackButton>
-            <h2 className="text-2xl font-bold text-center mb-6 text-slate-700">プロフィール</h2>
+            <h2 className="text-2xl font-bold text-center mb-6 text-slate-700">学習の設定</h2>
             
              <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
                 <div className="mb-6 text-center">
@@ -803,6 +639,11 @@ const App = () => {
         if (window.location.hash === '#history') dispatch({ type: 'NAVIGATE', to: 'history' });
     }, []);
 
+    useEffect(() => {
+        window.scrollTo({ top: 0 });
+        document.getElementById('main-content')?.focus({ preventScroll: true });
+    }, [nav.screen]);
+
     const resetSelection = useCallback(() => {
         setSelectedGrade(null);
         setSelectedTopic(null);
@@ -825,12 +666,24 @@ const App = () => {
         navigate('topic');
     };
 
-    const handleStartQuiz = (num: number) => {
+    const handleStartQuiz = (num: number, level: Difficulty | null = difficulty) => {
         if (!selectedTopic) return;
-        const generatedQuestions = generateQuestions(selectedTopic, num, difficulty);
+        const generatedQuestions = generateQuestions(selectedTopic, num, level);
+        setDifficulty(level);
         setQuestions(generatedQuestions);
         setQuizStartTime(Date.now());
         dispatch({ type: 'NAVIGATE', to: 'quiz' });
+    };
+
+    const handleQuickStart = (grade: Grade, topic: Topic) => {
+        const level: Difficulty = getTopicProgress(activeHistory, topic.id).accuracy >= 80 ? '標準' : '基礎';
+        setSelectedGrade(grade); setSelectedTopic(topic); setDifficulty(level);
+        setQuestions(generateQuestions(topic, 10, level)); setQuizStartTime(Date.now());
+        dispatch({ type: 'NAVIGATE', to: 'quiz' });
+    };
+
+    const quitQuiz = () => {
+        if (window.confirm('練習を終了しますか？途中の解答は保存されません。')) navigate(selectedTopic?.id === 'mixed' ? 'grade' : 'difficulty');
     };
 
     const handleStartMixedTest = (grades: Grade[]) => {
@@ -915,7 +768,7 @@ const App = () => {
             case 'profile': return 'プロフィール';
             case 'parent': return '保護者向け進捗';
             case 'test_builder': return '範囲指定テスト';
-            default: return `計算トレーニング | ${activeProfile.name}さん`;
+            default: return `${activeProfile.name}さんの学習`;
         }
     }
 
@@ -929,7 +782,7 @@ const App = () => {
                         setStorageMessage(selectProfile(id) ? '' : '⚠ 学習者の選択を端末に保存できませんでした。');
                         resetSelection();
                     }} />
-                    <LearningDashboard grades={availableGrades} reviewGrade={reviewGrade} history={activeHistory} dailyGoal={activeProfile.dailyGoal} onMixedTest={() => handleStartMixedTest(availableGrades)} onBuildTest={() => navigate('test_builder')} onSelectGrade={handleSelectGrade} onContinue={(grade, topic) => {
+                    <LearningDashboard grades={availableGrades} reviewGrade={reviewGrade} history={activeHistory} dailyGoal={activeProfile.dailyGoal} onQuickStart={handleQuickStart} onMixedTest={() => handleStartMixedTest(availableGrades)} onBuildTest={() => navigate('test_builder')} onSelectGrade={handleSelectGrade} onContinue={(grade, topic) => {
                         setSelectedGrade(grade);
                         setSelectedTopic(topic);
                         navigate('lesson');
@@ -943,21 +796,10 @@ const App = () => {
             case 'lesson':
                 return selectedTopic && <LessonScreen topic={selectedTopic} onStart={() => navigate('difficulty')} onBack={() => navigate('topic')} />;
             case 'difficulty':
-                return <DifficultySelector onSelect={(diff) => {
-                    setDifficulty(diff);
-                    navigate('num_questions');
-                }} onBack={() => navigate('topic')} />;
             case 'num_questions':
-                 const backLabel = ['小4', '小5', '小6', '中1', '中2', '中3'].includes(selectedGrade || '') ? '難易度選択に戻る' : '単元選択に戻る';
-                 return <NumQuestionsSelector onSelect={handleStartQuiz} onBack={() => {
-                      if (['小4', '小5', '小6', '中1', '中2', '中3'].includes(selectedGrade || '')) {
-                          navigate('difficulty');
-                      } else {
-                          navigate('topic');
-                      }
-                 }} backLabel={backLabel} />;
+                return selectedTopic && <QuizSetup topic={selectedTopic} onStart={(level, count) => handleStartQuiz(count, level)} onBack={() => navigate('lesson')} />;
             case 'quiz':
-                return questions.length > 0 && selectedTopic ? <Quiz questions={questions} onQuizComplete={handleQuizComplete} topicName={selectedTopic.name} onBack={() => navigate('num_questions')} /> : <div>Loading...</div>;
+                return questions.length > 0 && selectedTopic ? <Quiz questions={questions} onQuizComplete={handleQuizComplete} topicName={selectedTopic.name} onBack={quitQuiz} /> : <div>Loading...</div>;
             case 'result':
                 return quizResult && <ResultsScreen result={quizResult} reportRecord={quizResultToReport(quizResult)} streak={consecutiveDays} onRetry={handleRetry} onRetryWrong={handleRetryWrong} onBackToTop={() => navigate('grade')} />;
             case 'history':
@@ -974,7 +816,7 @@ const App = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className={`app-shell min-h-screen flex flex-col ${nav.screen === 'quiz' ? 'quiz-mode' : ''}`}>
             <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-3 focus:font-bold focus:text-sky-700 focus:shadow-lg">本文へ移動</a>
             <Header 
                 title={getScreenTitle()} 
@@ -982,11 +824,13 @@ const App = () => {
                 onProfileClick={() => navigate('profile')}
                 onParentClick={() => navigate('parent')}
                 onHomeClick={() => navigate('grade')}
-                showHomeButton={nav.screen !== 'grade'}
+                activeScreen={nav.screen}
+                focused={nav.screen === 'quiz'}
+                onQuit={quitQuiz}
             />
-            <main id="main-content" className="flex-grow container mx-auto max-w-4xl" tabIndex={-1}>
+            <main id="main-content" className="app-main flex-grow" tabIndex={-1}>
                 {storageMessage && <div role="status" className={`mx-2 mt-2 flex items-start justify-between gap-3 rounded-lg border p-3 text-sm font-semibold sm:mx-4 ${storageMessage.startsWith('✓') ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-rose-300 bg-rose-50 text-rose-800'}`}><span>{storageMessage}</span><button onClick={() => setStorageMessage('')} aria-label="通知を閉じる" className="min-h-12 min-w-12 shrink-0 rounded-lg">×</button></div>}
-                 <div className="bg-slate-50 rounded-lg shadow-inner m-2 sm:m-4">
+                 <div className={`screen-content screen-${nav.screen}`}>
                     {renderScreen()}
                 </div>
             </main>

@@ -9,13 +9,15 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "check": "npm run test && npm run audit:math && npm run typecheck && npm run build",
-    "audit:math": "vite-node scripts/export-math-audit.ts && python3 scripts/audit_math.py"
+    "audit:math": "vite-node scripts/export-math-audit.ts && python3 scripts/audit_math.py",
+    "test:ui": "node scripts/ui-check.mjs"
   },
   "dependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.0",
