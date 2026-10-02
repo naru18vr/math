@@ -63,22 +63,28 @@ export const generateM3Question = (topic: Topic, difficulty: Difficulty): Omit<Q
             const common = randInt(2, 5);
             const a = randInt(1, 5);
             const b = randInt(1, 5, [a]);
+            const factor = common * gcd(a, b);
+            const innerA = common * a / factor;
+            const innerB = common * b / factor;
             text = `${common * a}x + ${common * b} を因数分解しなさい。`;
-            answer = `${common}(${a}x+${b})`;
-            explanation = `共通因数 ${common} でくくります。答えは ${answer}。`;
+            answer = `${factor}(${innerA === 1 ? '' : innerA}x+${innerB})`;
+            explanation = `最大の共通因数 ${factor} でくくります。答えは ${answer}。`;
         } else if (difficulty === '標準') {
             const common = randInt(2, 5);
             const commonVar = Math.random() < 0.5 ? 'x' : 'y';
             const a = randInt(1, 5);
             const b = randInt(1, 5);
             const otherVar = commonVar === 'x' ? 'y' : 'x';
+            const factor = common * gcd(a, b);
+            const innerA = common * a / factor;
+            const innerB = common * b / factor;
             text = `${common * a}${commonVar}${otherVar} + ${common * b}${commonVar} を因数分解しなさい。`;
-            answer = `${common}${commonVar}(${a}${otherVar}+${b})`;
-            explanation = `共通因数 ${common}${commonVar} でくくります。答えは ${answer}。`;
+            answer = `${factor}${commonVar}(${innerA === 1 ? '' : innerA}${otherVar}+${innerB})`;
+            explanation = `最大の共通因数 ${factor}${commonVar} でくくります。答えは ${answer}。`;
         } else { // 発展
-            const common = ['a', 'b', 'x'][randInt(0, 2)];
-            const p1 = randInt(2, 5);
-            const p2 = randInt(2, 5);
+            const common = ['a', 'b'][randInt(0, 1)];
+            const p1 = randInt(1, 2);
+            const p2 = randInt(1, 2);
             const v1 = 'x';
             const v2 = 'y';
             text = `${common}${v1}^${p1} + ${common}${v2}^${p2} を因数分解しなさい。`;
@@ -133,7 +139,7 @@ export const generateM3Question = (topic: Topic, difficulty: Difficulty): Omit<Q
             explanation = `${num}を素因数分解すると ${outside}^2 × ${num / (outside ** 2)} となります。√の外に出せるのは${outside}です。答えは ${answer}。`;
         } else { // 発展
             const num = randInt(2, 7);
-            const den = randInt(2, 7, [num]);
+            const den = [2, 3, 5, 6, 7][randInt(0, 4)];
             text = `${num}/√${den} の分母を有理化しなさい。`;
             const common = gcd(num, den);
             const sNum = num / common;
@@ -319,7 +325,7 @@ export const generateM3Question = (topic: Topic, difficulty: Difficulty): Omit<Q
             if (Math.random() < 0.5) {
                 aStr = 'x'; bStr = b.toString(); cStr = c.toString();
                 answer = a.toString();
-                a_val = b; b_val = a; // For drawing, swap
+                a_val = a; b_val = b;
                 explanation = `三平方の定理 a² + b² = c² より、x² + ${b}² = ${c}²。 x² = ${c*c - b*b} = ${a*a}。よって x = ${a}。`;
             } else {
                 aStr = a.toString(); bStr = 'x'; cStr = c.toString();

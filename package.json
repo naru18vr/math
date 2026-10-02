@@ -8,7 +8,8 @@
     "build": "vite build",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "check": "npm run test && npm run typecheck && npm run build"
+    "check": "npm run test && npm run typecheck && npm run build",
+    "audit:math": "vite-node scripts/export-math-audit.ts && python3 scripts/audit_math.py"
   },
   "dependencies": {
     "react": "^19.0.0",

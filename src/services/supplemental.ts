@@ -79,8 +79,13 @@ export const generateSupplementalQuestion = (topic: Topic, difficulty: Difficult
         }
         case 'm2_data': {
             const base = randInt(2, max);
-            const values = [base, base + 2, base + 4, base + 6, base + 8];
-            return { text: `データ ${values.join('、')} の中央値を求めなさい。`, answer: values[2].toString(), explanation: `小さい順に並んだ5個の中央は3番目なので、中央値は${values[2]}です。` };
+            const values = Array.from({ length: 8 }, (_, index) => base + index * 2);
+            const q1 = (values[1] + values[2]) / 2;
+            const q2 = (values[3] + values[4]) / 2;
+            const q3 = (values[5] + values[6]) / 2;
+            const target = difficulty === '基礎' ? '第1四分位数' : difficulty === '標準' ? '第3四分位数' : '四分位範囲';
+            const answer = difficulty === '基礎' ? q1 : difficulty === '標準' ? q3 : q3 - q1;
+            return { text: `データ ${values.join('、')} の${target}を求めなさい。`, answer: String(answer), explanation: `下半分の中央値Q1=${q1}、全体の中央値Q2=${q2}、上半分の中央値Q3=${q3}。四分位範囲はQ3-Q1=${q3 - q1}です。したがって${target}は${answer}です。` };
         }
         case 'm3_expansion': {
             const a = randInt(1, max);
@@ -88,7 +93,7 @@ export const generateSupplementalQuestion = (topic: Topic, difficulty: Difficult
             return { text: `(x+${a})(x+${b}) を展開しなさい。`, answer: `x^2+${a + b}x+${a * b}`, explanation: `分配法則より x²+(${a}+${b})x+${a}×${b}＝x²+${a + b}x+${a * b}です。` };
         }
         case 'm3_quadratic_function': {
-            const a = randInt(1, Math.min(4, max));
+            const a = difficulty === '基礎' ? randInt(1, 4) : randInt(-4, 4, [0]);
             const x = randInt(-max, max, [0]);
             const y = a * x * x;
             return { text: `y=${a}x^2 で、x=${x}のときのyを求めなさい。`, answer: y.toString(), explanation: `x=${x}を代入して、y=${a}×(${x})²＝${y}です。` };

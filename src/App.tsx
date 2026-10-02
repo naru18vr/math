@@ -364,6 +364,10 @@ const Quiz = ({
     const [results, setResults] = useState<QuestionResult[]>([]);
     const [inputMode, setInputMode] = useState<'keypad' | 'keyboard'>('keypad');
     const inputRef = useRef<HTMLInputElement>(null);
+    const resolvedRef = useRef(false);
+    const nextLockedRef = useRef(false);
+
+    useEffect(() => { nextLockedRef.current = false; }, [currentQuestionIndex]);
     
     const currentQuestion = questions[currentQuestionIndex];
 
@@ -390,11 +394,12 @@ const Quiz = ({
     };
     
     const handleSubmit = () => {
-        if (showExplanation || !userAnswer.trim()) return;
+        if (showExplanation || resolvedRef.current || !userAnswer.trim()) return;
 
         const isCorrect = isAnswerCorrect(userAnswer, currentQuestion.answer);
 
         if (isCorrect) {
+            resolvedRef.current = true;
             setResults(prev => [...prev, { question: currentQuestion, attempts, isCorrect: true, isSkipped: false }]);
             setShowExplanation(true);
         } else {
@@ -402,6 +407,7 @@ const Quiz = ({
             setTimeout(() => setIsWrong(false), 500);
             
             if (attempts + 1 >= MAX_ATTEMPTS) {
+                resolvedRef.current = true;
                 setResults(prev => [...prev, { question: currentQuestion, attempts: MAX_ATTEMPTS, isCorrect: false, isSkipped: false }]);
                 setShowExplanation(true);
             } else {
@@ -411,12 +417,15 @@ const Quiz = ({
     };
 
     const handleNext = () => {
+        if (!showExplanation || nextLockedRef.current) return;
+        nextLockedRef.current = true;
         if (currentQuestionIndex < questions.length - 1) {
             setCurrentQuestionIndex(prev => prev + 1);
             setUserAnswer('');
             setAttempts(0);
             setShowExplanation(false);
-            setInputMode('keypad'); // Reset to keypad for next question
+            resolvedRef.current = false;
+            setIsWrong(false);
         } else {
             onQuizComplete(results);
         }
@@ -424,6 +433,10 @@ const Quiz = ({
     
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.isComposing || e.repeat || e.target instanceof HTMLButtonElement) return;
+            if (e.key !== 'Enter' || e.repeat || e.isComposing || e.keyCode === 229) return;
+            if (e.target instanceof HTMLElement && e.target.closest('button, a, select')) return;
+            e.preventDefault();
             if (showExplanation && e.key === 'Enter') {
                 handleNext();
             } else if (!showExplanation && e.key === 'Enter') {
@@ -435,7 +448,7 @@ const Quiz = ({
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [showExplanation, userAnswer, currentQuestionIndex]);
+    }, [showExplanation, userAnswer, currentQuestionIndex, attempts]);
 
     if (!currentQuestion) {
         return <div className="p-4 text-center">問題の読み込みに失敗しました。</div>;
@@ -508,7 +521,7 @@ const Quiz = ({
                     />
                 </div>
                 <div aria-live="polite" className="min-h-6 mt-1 text-center text-sm font-semibold">
-                    {isWrong && !showExplanation && <span className="text-rose-700">✕ ちがいます。あと{MAX_ATTEMPTS - attempts - 1}回ためせます。</span>}
+                    {isWrong && !showExplanation && <span className="text-rose-700">✕ ちがいます。あと{MAX_ATTEMPTS - attempts}回ためせます。</span>}
                 </div>
                 {inputMode === 'keypad' && <Keypad onKeyPress={handleKeypadPress} />}
                  {inputMode === 'keyboard' && (

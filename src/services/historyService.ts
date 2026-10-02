@@ -33,7 +33,8 @@ const normalizeQuizResult = (value: unknown): QuizResult | null => {
     if (!isRecord(value) || !GRADES.has(value.grade as Grade) || !isRecord(value.topic) || !Array.isArray(value.results)) return null;
     if (typeof value.topic.id !== 'string' || typeof value.topic.name !== 'string' || !value.topic.name.trim()) return null;
     if (typeof value.startTime !== 'number' || !Number.isFinite(value.startTime)
-        || typeof value.endTime !== 'number' || !Number.isFinite(value.endTime)) return null;
+        || typeof value.endTime !== 'number' || !Number.isFinite(value.endTime)
+        || !Number.isFinite(new Date(value.startTime).getTime()) || !Number.isFinite(new Date(value.endTime).getTime())) return null;
     const results = value.results.map(normalizeQuestionResult).filter((item): item is QuestionResult => item !== null);
     if (results.length !== value.results.length) return null;
     const difficulty = value.difficulty === null || DIFFICULTIES.has(value.difficulty as Difficulty)
@@ -46,7 +47,7 @@ const normalizeQuizResult = (value: unknown): QuizResult | null => {
         difficulty,
         results,
         startTime: Math.max(0, value.startTime),
-        endTime: Math.max(value.startTime, value.endTime),
+        endTime: Math.max(0, value.startTime, value.endTime),
     };
 };
 
@@ -63,18 +64,18 @@ export const normalizeHistory = (value: unknown): QuizResult[] => {
     return [...unique.values()].sort((a, b) => b.endTime - a.endTime).slice(0, MAX_HISTORY_ENTRIES);
 };
 
-export const readHistory = (storage: Pick<Storage, 'getItem'> = localStorage): QuizResult[] => {
+export const readHistory = (storage?: Pick<Storage, 'getItem'>): QuizResult[] => {
     try {
-        const raw = storage.getItem(HISTORY_KEY);
+        const raw = (storage ?? localStorage).getItem(HISTORY_KEY);
         return raw ? normalizeHistory(JSON.parse(raw)) : [];
     } catch {
         return [];
     }
 };
 
-export const saveHistory = (history: QuizResult[], storage: Pick<Storage, 'setItem'> = localStorage): boolean => {
+export const saveHistory = (history: QuizResult[], storage?: Pick<Storage, 'setItem'>): boolean => {
     try {
-        storage.setItem(HISTORY_KEY, JSON.stringify(normalizeHistory(history)));
+        (storage ?? localStorage).setItem(HISTORY_KEY, JSON.stringify(normalizeHistory(history)));
         return true;
     } catch (error) {
         console.error('Failed to save history:', error);
