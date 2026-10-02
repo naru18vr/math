@@ -92,6 +92,15 @@ export const TOPICS_BY_GRADE: Record<Grade, Topic[]> = {
     { id: 'm3_similarity', name: '相似と相似比' },
     { id: 'm3_circle', name: '円周角の定理' },
     { id: 'm3_sampling', name: '標本調査' },
+    { id: 'm3_quadratic_equations_square', name: '二次方程式（平方根・平方完成）' },
+    { id: 'm3_quadratic_equation_word', name: '二次方程式の文章題' },
+    { id: 'm3_quadratic_function_rate', name: '二次関数（変化の割合）' },
+    { id: 'm3_quadratic_function_range', name: '二次関数（変域）' },
+    { id: 'm3_similarity_area_volume', name: '相似（面積比・体積比）' },
+    { id: 'm3_similarity_parallel', name: '相似（平行線と線分の比）' },
+    { id: 'm3_similarity_conditions', name: '相似条件と証明（穴埋め）' },
+    { id: 'm3_pythagorean_application', name: '三平方の定理（平面・空間への応用）' },
+    { id: 'm3_sampling_method', name: '標本調査：調査方法の判断' },
   ],
 };
 

@@ -113,29 +113,29 @@ export const quizResultToReport = (result: QuizResult): LearningReportRecord => 
     };
 };
 
-const isValidRecord = (value: unknown): value is LearningReportRecord => {
+export const isValidReportRecord = (value: unknown): value is LearningReportRecord => {
     if (!value || typeof value !== 'object') return false;
     const record = value as Partial<LearningReportRecord>;
     return record.version === 1 && typeof record.id === 'string' && typeof record.studentId === 'string'
         && typeof record.date === 'string' && isValidLocalDateKey(record.date)
         && typeof record.completedAt === 'string' && Number.isFinite(Date.parse(record.completedAt)) && typeof record.activity === 'string'
-        && typeof record.correct === 'number' && Number.isFinite(record.correct) && record.correct >= 0
-        && typeof record.total === 'number' && Number.isFinite(record.total) && record.total >= record.correct
+        && typeof record.correct === 'number' && Number.isSafeInteger(record.correct) && record.correct >= 0
+        && typeof record.total === 'number' && Number.isSafeInteger(record.total) && record.total >= record.correct
         && typeof record.durationMinutes === 'number' && Number.isFinite(record.durationMinutes) && record.durationMinutes >= 0
         && Array.isArray(record.strengths) && record.strengths.every(item => typeof item === 'string')
         && Array.isArray(record.weaknesses) && record.weaknesses.every(item => typeof item === 'string')
-        && typeof record.nextAction === 'string';
+        && typeof record.nextAction === 'string' && typeof record.isAssessment === 'boolean';
 };
 
-export const readReportStore = (storage: Pick<Storage, 'getItem'> = localStorage): LearningReportRecord[] => {
+export const readReportStore = (storage?: Pick<Storage, 'getItem'>): LearningReportRecord[] => {
     try {
-        const raw = storage.getItem(REPORT_STORAGE_KEY);
+        const raw = (storage ?? localStorage).getItem(REPORT_STORAGE_KEY);
         if (!raw) return [];
         const parsed = JSON.parse(raw) as unknown;
         const candidates = Array.isArray(parsed) ? parsed : (parsed as Partial<ReportStore>)?.records;
         if (!Array.isArray(candidates)) return [];
         const unique = new Map<string, LearningReportRecord>();
-        candidates.filter(isValidRecord).forEach(record => unique.set(record.id, record));
+        candidates.filter(isValidReportRecord).forEach(record => unique.set(record.id, record));
         return [...unique.values()].sort((a, b) => b.completedAt.localeCompare(a.completedAt));
     } catch {
         return [];
@@ -148,11 +148,11 @@ export const mergeCompatibleReports = (stored: LearningReportRecord[], history: 
     return [...byId.values()].sort((a, b) => b.completedAt.localeCompare(a.completedAt));
 };
 
-export const saveReportRecord = (record: LearningReportRecord, storage: Pick<Storage, 'getItem' | 'setItem'> = localStorage): boolean => {
+export const saveReportRecord = (record: LearningReportRecord, storage?: Pick<Storage, 'getItem' | 'setItem'>): boolean => {
     try {
         const records = mergeCompatibleReports(readReportStore(storage), []);
         if (!records.some(item => item.id === record.id)) records.unshift(record);
-        storage.setItem(REPORT_STORAGE_KEY, JSON.stringify({ version: REPORT_VERSION, records } satisfies ReportStore));
+        (storage ?? localStorage).setItem(REPORT_STORAGE_KEY, JSON.stringify({ version: REPORT_VERSION, records } satisfies ReportStore));
         return true;
     } catch {
         return false;
@@ -179,7 +179,7 @@ const summarizePeriod = (records: LearningReportRecord[]) => {
 
 export const getWeeklySummary = (records: LearningReportRecord[], now = new Date()): WeeklySummary => {
     const today = localDayNumber(toLocalDateKey(now));
-    const validRecords = records.filter(record => isValidLocalDateKey(record.date));
+    const validRecords = [...new Map(records.filter(isValidReportRecord).map(record => [record.id, record])).values()];
     const current = validRecords.filter(record => { const day = localDayNumber(record.date); return day <= today && day >= today - 6; });
     const previous = validRecords.filter(record => { const day = localDayNumber(record.date); return day <= today - 7 && day >= today - 13; });
     const currentTotals = summarizePeriod(current);

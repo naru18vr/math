@@ -4,6 +4,10 @@ import { createHistoryCsv, downloadHistoryCsv } from './reportService';
 import { vi } from 'vitest';
 
 describe('report service', () => {
+    it('exports imported text as text rather than spreadsheet formulas', () => {
+        const history: QuizResult[] = [{ grade: '小5', topic: { id: 'g5_average', name: '=1+1' }, difficulty: '標準', startTime: 0, endTime: 1000, results: [] }];
+        expect(createHistoryCsv(history)).toContain('"\'=1+1"');
+    });
     it('reports a CSV download failure without throwing', () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
         vi.stubGlobal('URL', { createObjectURL: () => { throw new Error('blocked'); }, revokeObjectURL: vi.fn() });

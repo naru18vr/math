@@ -45,7 +45,7 @@ export const generateM2Question = (topic: Topic, difficulty: Difficulty): Omit<Q
             // 2x+y=c1, 3x+2y=c2
             const mult = randInt(2, 3);
             a1 = randInt(1, 3); b1 = 1;
-            a2 = randInt(1, 3, [a1]); b2 = mult;
+            a2 = randInt(1, 3, [a1, a1 * mult]); b2 = mult;
             c1 = a1 * x + b1 * y;
             c2 = a2 * x + b2 * y;
             explanation = `標準：片方の式を${mult}倍して係数をそろえ、加減法で解きます。答えは x=${x}, y=${y} です。`;
@@ -69,25 +69,27 @@ export const generateM2Question = (topic: Topic, difficulty: Difficulty): Omit<Q
         if (difficulty === '基礎') {
             // y = Ax+B or x = Ay+B
             const substituteX = Math.random() < 0.5;
-            const a2 = randInt(2, 4);
+            let a2 = randInt(2, 4);
             const b2 = randInt(2, 4);
-            const c2 = a2 * x + b2 * y;
 
             if (substituteX) { // x = ...
                 const A = randInt(1, 3) * (Math.random() < 0.5 ? 1 : -1);
                 const B = x - A * y;
+                if (b2 + a2 * A === 0) a2 += 1;
                 firstEqText = `x = ${A === 1 ? '' : A === -1 ? '-' : A}y ${B >= 0 ? `+ ${B}` : `- ${-B}`}`;
             } else { // y = ...
                 const A = randInt(1, 3) * (Math.random() < 0.5 ? 1 : -1);
                 const B = y - A * x;
+                if (a2 + b2 * A === 0) a2 += 1;
                 firstEqText = `y = ${A === 1 ? '' : A === -1 ? '-' : A}x ${B >= 0 ? `+ ${B}` : `- ${-B}`}`;
             }
-            secondEqText = formatEq(a2, b2, c2);
+            secondEqText = formatEq(a2, b2, a2 * x + b2 * y);
             explanation = `基礎：最初の式を2番目の式に代入して解きます。答えは x=${x}, y=${y} です。`;
         } else if (difficulty === '標準') {
             // 2x+y=c1, ax+by=c2  -> y = -2x+c1
             const a1 = randInt(2, 4); const b1 = 1;
-            const a2 = randInt(2, 4, [a1]); const b2 = randInt(2, 4);
+            const b2 = randInt(2, 4);
+            const a2 = randInt(2, 4, [a1, a1 * b2]);
             const c1 = a1*x + b1*y;
             const c2 = a2*x + b2*y;
             firstEqText = formatEq(a1, b1, c1);
@@ -96,7 +98,8 @@ export const generateM2Question = (topic: Topic, difficulty: Difficulty): Omit<Q
         } else { // 発展
              // ax+by=c1, dx+ey=c2  (no coeffs are 1)
             const a1 = randInt(2, 4); const b1 = randInt(2, 4);
-            const a2 = randInt(2, 4, [a1]); const b2 = randInt(2, 4, [b1]);
+            const b2 = randInt(2, 4, [b1]);
+            const a2 = randInt(2, 4, [a1, a1 * b2 / b1]);
             const c1 = a1*x + b1*y;
             const c2 = a2*x + b2*y;
             firstEqText = formatEq(a1, b1, c1);

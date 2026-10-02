@@ -14,6 +14,29 @@ const backup: BackupData = {
 };
 
 describe('backup service', () => {
+    it('rejects valid JSON with invalid records before any write', () => {
+        for (const [key, value] of [
+            ['calculation-training-history', '{"wrong":true}'],
+            ['calculation-training-history', '[{"broken":true}]'],
+            ['calculation-training-student-profiles-v2', '[null]'],
+            ['calculation-training-reports-v1', '{"records":[{"broken":true}]}'],
+            ['calculation-training-active-profile-v2', 'unknown'],
+        ]) {
+            const setItem = vi.fn();
+            expect(() => restoreBackupData({ ...backup, data: { ...backup.data, [key]: value } }, { getItem: () => null, setItem, removeItem: vi.fn() })).toThrow();
+            expect(setItem).not.toHaveBeenCalled();
+        }
+    });
+
+    it('reports rollback failure honestly', () => {
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        expect(() => restoreBackupData(backup, {
+            getItem: () => 'old',
+            setItem: () => { throw new Error('blocked'); },
+            removeItem: () => { throw new Error('blocked'); },
+        })).toThrow('元の記録への戻し処理に失敗');
+        consoleSpy.mockRestore();
+    });
     it('reports a download failure without stopping the screen', () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
         vi.stubGlobal('localStorage', { getItem: () => { throw new Error('blocked'); } });

@@ -1,6 +1,10 @@
 import type { QuizResult } from '../types';
 
-const csvCell = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
+const csvCell = (value: string | number) => {
+    const text = String(value);
+    const safe = typeof value === 'string' && /^[\s]*[=+\-@]/.test(text) ? `'${text}` : text;
+    return `"${safe.replace(/"/g, '""')}"`;
+};
 
 export const createHistoryCsv = (history: QuizResult[]): string => {
     const rows = history.map(session => {

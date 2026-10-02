@@ -48,19 +48,19 @@ export const normalizeProfiles = (value: unknown, legacyName?: string | null): S
     return profiles;
 };
 
-export const loadProfiles = (storage: Pick<Storage, 'getItem'> = localStorage): StudentProfile[] => {
+export const loadProfiles = (storage?: Pick<Storage, 'getItem'>): StudentProfile[] => {
     try {
-        const saved = storage.getItem(PROFILES_KEY);
+        const saved = (storage ?? localStorage).getItem(PROFILES_KEY);
         if (saved) return normalizeProfiles(JSON.parse(saved));
-        return normalizeProfiles(undefined, storage.getItem(LEGACY_NAME_KEY));
+        return normalizeProfiles(undefined, (storage ?? localStorage).getItem(LEGACY_NAME_KEY));
     } catch {
         return cloneDefaults();
     }
 };
 
-export const safeStorageSet = (key: string, value: string, storage: Pick<Storage, 'setItem'> = localStorage): boolean => {
+export const safeStorageSet = (key: string, value: string, storage?: Pick<Storage, 'setItem'>): boolean => {
     try {
-        storage.setItem(key, value);
+        (storage ?? localStorage).setItem(key, value);
         return true;
     } catch (error) {
         console.error(`Failed to save ${key}:`, error);

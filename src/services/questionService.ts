@@ -7,12 +7,18 @@ import { generateM1Question } from './middle1';
 import { generateM2Question } from './middle2';
 import { generateM3Question } from './middle3';
 import { generateSupplementalQuestion, SUPPLEMENTAL_TOPIC_IDS } from './supplemental';
+import { generateM3ExtendedQuestion, M3_EXTENDED_TOPIC_IDS } from './middle3Extended';
 import { shuffle } from './utils';
 
 
 const generateQuestion = (topic: Topic, index: number, difficulty: Difficulty | null): Question => {
   let q: Omit<Question, 'id'>;
   const topicPrefix = topic.id.substring(0, 2);
+
+  if (M3_EXTENDED_TOPIC_IDS.has(topic.id)) {
+    q = generateM3ExtendedQuestion(topic, difficulty || '標準');
+    return { id: index, topicId: topic.id, ...q };
+  }
 
   if (SUPPLEMENTAL_TOPIC_IDS.has(topic.id)) {
     q = generateSupplementalQuestion(topic, difficulty || '標準');

@@ -25,7 +25,9 @@ export type TopicId =
   'm2_polynomial' | 'm2_equation_word' | 'm2_probability' | 'm2_data' |
   // 中3
   'm3_factorization_basic' | 'm3_factorization_common_factor' | 'm3_factorization_formula' | 'm3_square_roots_simplify' | 'm3_square_roots_calculation' | 'm3_quadratic_equations_factorization' | 'm3_quadratic_equations_formula' | 'm3_pythagorean_theorem' |
-  'm3_expansion' | 'm3_quadratic_function' | 'm3_similarity' | 'm3_circle' | 'm3_sampling';
+  'm3_expansion' | 'm3_quadratic_function' | 'm3_similarity' | 'm3_circle' | 'm3_sampling' |
+  'm3_quadratic_equations_square' | 'm3_quadratic_equation_word' | 'm3_quadratic_function_rate' | 'm3_quadratic_function_range' |
+  'm3_similarity_area_volume' | 'm3_similarity_parallel' | 'm3_similarity_conditions' | 'm3_pythagorean_application' | 'm3_sampling_method';
 
 export interface Topic {
   id: TopicId;
